@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="default-character" content="{{ character_name }}">
+    <title>Voice Chat AI</title>
+    <link rel="stylesheet" href="/app/static/css/styles.css">
+    <link rel="icon" href="/app/static/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Voice Chat AI application">
+    <meta name="keywords" content="AI, Voice, Chat, OpenAI, Ollama">
+    <meta name="author" content="bigsk1">
+    <style>
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                padding: 5px;
+            }
+            
+            header {
+                flex-direction: column;
+                padding: 10px 5px;
+            }
+            
+            .header-controls {
+                margin-top: 10px;
+                width: 100%;
+                justify-content: space-between;
+                display: flex;
+                flex-direction: row;
+            }
+            
+            .header-controls .button-group {
+                display: flex;
+                gap: 10px;
+                margin-left: 10px;
+            }
+            
+            .header-controls .main-nav {
+                margin-left: 0;
+                margin-right: 5px;
+            }
+        }
+        
+        /* Small phone styles */
+        @media (max-width: 480px) {
+            body {
+                font-size: 14px;
+            }
+            
+            h1 {
+                font-size: 1.3rem;
+            }
+            
+            .container {
+                padding: 5px;
+            }
+        }
+        .header-controls #theme-toggle {
+            margin-top: 12px;
+        }
+        .header-controls #download-button {
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body class="dark-mode">
+    <header>
+        <h1>
+            Voice Chat AI
+            <div id="mic-icon" class="mic-off">&#x1F399;</div>
+        </h1>
+        <div class="header-controls">
+            <div class="button-group">
+                <button id="theme-toggle" aria-label="Toggle dark/light mode">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+                <button id="download-button" aria-label="Download conversation history" title="Download conversation history">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-download">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </button>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="/" class="active">Dashboard</a></li>
+                    <li><a href="/enhanced">Enhanced</a></li>
+                    <li><a href="/webrtc_realtime">Realtime</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <main>
+        <div id="conversation">
+            <div id="messages"></div>
+            <div id="voice-animation" class="hidden">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="8" />
+                    <g id="voice-bars">
+                        <rect x="30" y="35" width="8" height="30" rx="4" />
+                        <rect x="46" y="25" width="8" height="50" rx="4" />
+                        <rect x="62" y="35" width="8" height="30" rx="4" />
+                    </g>
+                </svg>
+            </div>
+        </div>
+        <div class="controls">
+            <button id="start-conversation-btn">Start</button>
+            <button id="stop-conversation-btn">Stop</button>
+            <button id="clear-conversation-btn">Clear</button>
+        </div>
+        <div class="settings">
+            <div class="setting-group">
+                <label for="character-select">Character:</label>
+                <select id="character-select"></select>
+            </div>
+            <div class="setting-group">
+                <label for="provider-select">Model Provider:</label>
+                <select id="provider-select">
+                    <option value="openai">OpenAI</option>
+                    <option value="ollama">Ollama</option>
+                    <option value="xai">XAI</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label for="tts-select">TTS Provider:</label>
+                <select id="tts-select">
+                    <option value="openai">OpenAI</option>
+                    <option value="xtts">XTTS</option>
+                    <option value="elevenlabs">ElevenLabs</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label for="openai-voice-select">OpenAI TTS Voice:</label>
+                <select id="openai-voice-select">
+                    <option value="alloy">Alloy - female</option>
+                    <option value="echo">Echo - male</option>
+                    <option value="fable">Fable - male</option>
+                    <option value="onyx">Onyx - male</option>
+                    <option value="nova">Nova - female</option>
+                    <option value="shimmer">Shimmer - female</option>
+                    <option value="sage">Sage - female</option>
+                    <option value="coral">Coral - female</option>
+                    <option value="ash">Ash - male</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label for="elevenlabs-voice-select">ElevenLabs Voice:</label>
+                <select id="elevenlabs-voice-select"></select>
+            </div>
+            <div class="setting-group">
+                <label for="openai-model-select">OpenAI Model:</label>
+                <select id="openai-model-select">
+                    <option value="gpt-4o">GPT-4o</option>
+                    <option value="gpt-4o-mini">GPT-4o-mini</option>
+                    <option value="gpt-4">GPT-4</option>
+                    <option value="gpt-4-turbo">GPT-4-Turbo</option>
+                    <option value="gpt-3.5-turbo">GPT-3.5-Turbo</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label for="ollama-model-select">Ollama Model:</label>
+                <select id="ollama-model-select">
+                    <option value="llama3.2">Select Ollama to Load</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label for="xai-model-select">XAI Model:</label>
+                <select id="xai-model-select">
+                    <option value="grok-beta">Grok Beta</option>
+                    <option value="grok-2-1212">Grok 2-1212</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label for="xtts-speed-select">XTTS Speed:</label>
+                <select id="xtts-speed-select">
+                    <option value="1.0">1.0</option>
+                    <option value="1.1">1.1</option>
+                    <option value="1.2">1.2</option>
+                    <option value="1.3">1.3</option>
+                    <option value="1.4">1.4</option>
+                    <option value="1.5">1.5</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label for="transcription-select">Transcription:</label>
+                <select id="transcription-select">
+                    {% if faster_whisper_local %}
+                    <option value="local_whisper" selected>Local Faster Whisper</option>
+                    <option value="gpt-4o-mini-transcribe">OpenAI GPT-4o Mini</option>
+                    <option value="gpt-4o-transcribe">OpenAI GPT-4o</option>
+                    <option value="whisper-1">OpenAI Whisper-1</option>
+                    {% else %}
+                    <option value="gpt-4o-mini-transcribe" selected>OpenAI GPT-4o Mini</option>
+                    <option value="gpt-4o-transcribe">OpenAI GPT-4o</option>
+                    <option value="whisper-1">OpenAI Whisper-1</option>
+                    <option value="local_whisper">Local Faster Whisper</option>
+                    {% endif %}
+                </select>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p><a href="https://github.com/bigsk1/voice-chat-ai" target="_blank">GitHub Repository</a></p>
+    </footer>
+    <script src="/app/static/js/scripts.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Characters are already loaded by scripts.js
+            // We only need to set the value here
+            setTimeout(() => {
+                document.getElementById('character-select').value = "{{ character_name }}";
+            }, 100);
+
+            fetch('/elevenlabs_voices')
+                .then(response => response.json())
+                .then(data => {
+                    const voiceSelect = document.getElementById('elevenlabs-voice-select');
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.text = 'Default Voice';
+                    voiceSelect.add(defaultOption);
+
+                    data.voices.forEach(voice => {
+                        const option = document.createElement('option');
+                        option.value = voice.id;
+                        option.text = voice.name;
+                        voiceSelect.add(option);
+                    });
+                    voiceSelect.value = "{{ elevenlabs_voice }}";
+                });
+
+            document.getElementById('provider-select').value = "{{ model_provider }}";
+            document.getElementById('tts-select').value = "{{ tts_provider }}";
+            document.getElementById('openai-voice-select').value = "{{ openai_tts_voice }}";
+            document.getElementById('openai-model-select').value = "{{ openai_model }}";
+            document.getElementById('ollama-model-select').value = "{{ ollama_model }}";
+            document.getElementById('xtts-speed-select').value = "{{ xtts_speed }}";
+        });
+    </script>
+</body>
+</html>
